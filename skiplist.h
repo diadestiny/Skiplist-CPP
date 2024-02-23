@@ -178,7 +178,7 @@ int SkipList<K, V>::insert_element(const K key, const V value) {
 
     // if current node have key equal to searched key, we get it
     if (current != NULL && current->get_key() == key) {
-        std::cout << "key: " << key << ", exists" << std::endl;
+        // std::cout << "key: " << key << ", exists" << std::endl;
         mtx.unlock();
         return 1;
     }
@@ -190,7 +190,7 @@ int SkipList<K, V>::insert_element(const K key, const V value) {
         // Generate a random level for node
         int random_level = get_random_level();
 
-        // If random level is greater thar skip list's current level, initialize update value with pointer to header
+        // If random level is greater than skip list's current level, initialize update value with pointer to header
         if (random_level > _skip_list_level) {
             for (int i = _skip_list_level+1; i < random_level+1; i++) {
                 update[i] = _header;
@@ -206,7 +206,7 @@ int SkipList<K, V>::insert_element(const K key, const V value) {
             inserted_node->forward[i] = update[i]->forward[i];
             update[i]->forward[i] = inserted_node;
         }
-        std::cout << "Successfully inserted key:" << key << ", value:" << value << std::endl;
+        // std::cout << "Successfully inserted key:" << key << ", value:" << value << std::endl;
         _element_count ++;
     }
     mtx.unlock();
@@ -218,7 +218,7 @@ template<typename K, typename V>
 void SkipList<K, V>::display_list() {
 
     std::cout << "\n*****Skip List*****"<<"\n"; 
-    for (int i = 0; i <= _skip_list_level; i++) {
+    for (int i = _skip_list_level; i >=0; i--) {
         Node<K, V> *node = this->_header->forward[i]; 
         std::cout << "Level " << i << ": ";
         while (node != NULL) {
@@ -255,8 +255,8 @@ void SkipList<K, V>::load_file() {
     _file_reader.open(STORE_FILE);
     std::cout << "load_file-----------------" << std::endl;
     std::string line;
-    std::string* key = new std::string();
-    std::string* value = new std::string();
+    std::string* key = new std::string(); //这里是因为key和value是不定长的
+    std::string* value = new std::string(); //这里是因为key和value是不定长的
     while (getline(_file_reader, line)) {
         get_key_value_from_string(line, key, value);
         if (key->empty() || value->empty()) {
@@ -266,8 +266,8 @@ void SkipList<K, V>::load_file() {
         insert_element(stoi(*key), *value);
         std::cout << "key:" << *key << "value:" << *value << std::endl;
     }
-    delete key;
-    delete value;
+    delete key; //和new 配对使用
+    delete value; 
     _file_reader.close();
 }
 
@@ -283,7 +283,7 @@ void SkipList<K, V>::get_key_value_from_string(const std::string& str, std::stri
     if(!is_valid_string(str)) {
         return;
     }
-    *key = str.substr(0, str.find(delimiter));
+    *key = str.substr(0, str.find(delimiter)); //.substr(start_index,len)
     *value = str.substr(str.find(delimiter)+1, str.length());
 }
 
