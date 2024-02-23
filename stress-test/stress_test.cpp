@@ -53,7 +53,7 @@ int main() {
 
         for( i = 0; i < NUM_THREADS; i++ ) {
             std::cout << "main() : creating thread, " << i << std::endl;
-            rc = pthread_create(&threads[i], NULL, insertElement, (void *)i);
+            rc = pthread_create(&threads[i], NULL, insertElement, (void *)i);ithu
 
             if (rc) {
                 std::cout << "Error:unable to create thread," << rc << std::endl;

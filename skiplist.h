@@ -56,6 +56,7 @@ Node<K, V>::Node(const K k, const V v, int level) {
     this->forward = new Node<K, V>*[level+1];
     
 	// Fill forward array with 0(NULL) 
+    // sizeof(Node<K, V>*) 表示这个Node<K, V>指针的大小，再乘以(level)+1
     memset(this->forward, 0, sizeof(Node<K, V>*)*(level+1));
 };
 
@@ -149,14 +150,18 @@ level 0         1    4   9 10         30   40  | 50 |  60      70       100
                                                +----+
 
 */
+/* 这段代码实现了跳表的插入操作。它首先加锁以防止多线程同时修改跳表，然后从头节点开始遍历跳表，找到每一层需要插入新节点的位置，并将这些位置记录在 update 数组中。然后根据需要插入的键生成一个随机层数，
+如果随机层数大于当前跳表的层数，则需要将 update 数组中的值初始化为指向头节点的指针，并更新跳表的层数。接着，创建一个新的节点，并将其插入到跳表中，最后解锁以允许其他线程访问跳表。
+*/
 template<typename K, typename V>
 int SkipList<K, V>::insert_element(const K key, const V value) {
     
     mtx.lock();
-    Node<K, V> *current = this->_header;
+    Node<K, V> *current = this->_header; // 从头节点开始查找
 
     // create update array and initialize it 
     // update is array which put node that the node->forward[i] should be operated later
+    // 创建一个用于记录每一层需要操作的节点的数组 update，并将其初始化为 NULL
     Node<K, V> *update[_max_level+1];
     memset(update, 0, sizeof(Node<K, V>*)*(_max_level+1));  
 
@@ -217,7 +222,7 @@ void SkipList<K, V>::display_list() {
         Node<K, V> *node = this->_header->forward[i]; 
         std::cout << "Level " << i << ": ";
         while (node != NULL) {
-            std::cout << node->get_key() << ":" << node->get_value() << ";";
+            std::cout << node->get_key() << ":" << node->get_value() << " --> ";
             node = node->forward[i];
         }
         std::cout << std::endl;
@@ -364,12 +369,16 @@ bool SkipList<K, V>::search_element(K key) {
 
     // start from highest level of skip list
     for (int i = _skip_list_level; i >= 0; i--) {
+        // 内层循环：对应跳表里面横着走，i(level)不变，找到 最接近key的left元素(current->forward[i])
         while (current->forward[i] && current->forward[i]->get_key() < key) {
             current = current->forward[i];
         }
+        // 然后再往下走，在下一个level(i--)执行上述内层循环
     }
+    // 直至找到有序跳表中最接近key的left元素
 
     //reached level 0 and advance pointer to right node, which we search
+    //判断最接近key的left元素current的next元素(forward[0])是不是目标key
     current = current->forward[0];
 
     // if current node have key equal to searched key, we get it
